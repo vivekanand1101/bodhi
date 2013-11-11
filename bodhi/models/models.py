@@ -182,6 +182,26 @@ user_package_table = Table('user_package_table', metadata,
         Column('package_id', Integer, ForeignKey('packages.id')))
 
 
+class Request(Base):
+    __tablename__ = 'requests'
+    __exclude_columns__ = ('id',)
+
+    type = Column(UpdateRequest.db_type(), default=UpdateRequest.testing)
+
+    # When this request was filed
+    timestamp = Column(DateTime, default=datetime.utcnow)
+
+    # Whether or not this request is currently being processed by the masher
+    locked = Column(Boolean, default=False)
+
+    # update backref
+    update_id = Column(Integer, ForeignKey('updates.id'))
+
+    # TODO:
+    # ability to complete/delete this
+    # request_complete, comment on update, send email
+
+
 class Release(Base):
     __tablename__ = 'releases'
     __exclude_columns__ = ('id', 'metrics', 'builds')
@@ -564,7 +584,6 @@ class Update(Base):
     status = Column(UpdateStatus.db_type(),
                     default=UpdateStatus.pending,
                     nullable=False)
-    request = Column(UpdateRequest.db_type(), default=UpdateRequest.testing)
     severity = Column(UpdateSeverity.db_type(), default=UpdateSeverity.unspecified)
     suggest = Column(UpdateSuggestion.db_type(), default=UpdateSuggestion.unspecified)
 
@@ -604,6 +623,8 @@ class Update(Base):
     comments = relationship('Comment', backref='update',
                         order_by='Comment.timestamp')
     builds = relationship('Build', backref='update')
+    requests = relationship('Request', backref='update',
+                            order_by='Request.timestamp')
 
     # Many-to-many relationships
     bugs = relationship('Bug', secondary=update_bug_table,
