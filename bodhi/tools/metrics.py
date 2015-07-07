@@ -40,6 +40,7 @@ def main():
                 'num_feedback': 0,
                 'num_anon_feedback': 0,
                 'num_critpath': 0,
+                'num_critpath_security': 0,
                 'num_critpath_approved': 0,
                 'num_critpath_unapproved': 0,
                 'num_stablekarma': 0,
@@ -148,6 +149,10 @@ def main():
                 if update.status == 'stable' and update.karma == 0:
                     data['critpath_without_karma'].add(update)
 
+                # Critpath security updates
+                if update.type == 'security':
+                    data['num_critpath_security'] += 1
+
                 # Proventester metrics
                 proventester_karma = defaultdict(int)  # {username: karma}
                 positive_proventesters = 0
@@ -192,6 +197,8 @@ def main():
         print " * %d bugs resolved" % len(data['bugs'])
         print " * %d critical path updates (%0.2f%%)" % (data['num_critpath'],
                 float(data['num_critpath']) / data['num_updates'] * 100)
+        print " * %d critical path security updates (%0.2f%% of all security updates)" % (data['num_critpath_security'],
+                float(data['num_critpath_security']) / data['num_security'] * 100)
         print " * %d approved critical path updates" % (
                 data['num_critpath_approved'])
         print " * %d unapproved critical path updates" % (
