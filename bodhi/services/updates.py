@@ -16,7 +16,7 @@ import copy
 import math
 
 from cornice import Service
-from pyramid.httpexceptions import HTTPFound
+from pyramid.httpexceptions import HTTPFound, exception_response
 from pyramid.security import has_permission
 from sqlalchemy import func, distinct
 from sqlalchemy.sql import or_
@@ -111,6 +111,16 @@ def get_update_for_editing(request):
         severities=reversed(bodhi.models.UpdateSeverity.values()),
         suggestions=reversed(bodhi.models.UpdateSuggestion.values()),
     )
+
+
+@update_request.get(accept=('application/json', 'text/json'), renderer='json',
+                error_handler=bodhi.services.errors.json_handler)
+@update_request.get(accept=('application/javascript'), renderer='jsonp',
+                error_handler=bodhi.services.errors.jsonp_handler)
+@update_request.get(accept="text/html", renderer="update.html",
+                error_handler=bodhi.services.errors.html_handler)
+def update_request_get(request):
+    raise exception_response(405)
 
 
 @update_request.post(schema=bodhi.schemas.UpdateRequestSchema,
