@@ -61,13 +61,6 @@ update_edit = Service(name='update_edit', path='/updates/{id}/edit',
                  acl=bodhi.security.packagers_allowed_acl,
                  cors_origins=bodhi.security.cors_origins_rw)
 
-update_old = Service(name='update_old', path='/updates/{id}/{title}',
-                     validators=(validate_update_id,),
-                     description='Update submission service',
-                     #acl=bodhi.security.package_maintainers_only_acl,
-                     acl=bodhi.security.packagers_allowed_acl,
-                     cors_origins=bodhi.security.cors_origins_rw)
-
 updates = Service(name='updates', path='/updates/',
                   acl=bodhi.security.packagers_allowed_acl,
                   description='Update submission service',
@@ -79,6 +72,12 @@ update_request = Service(name='update_request', path='/updates/{id}/request',
                          acl=bodhi.security.packagers_allowed_acl,
                          cors_origins=bodhi.security.cors_origins_rw)
 
+update_old = Service(name='update_old', path='/updates/{id}/{title}',
+                     validators=(validate_update_id,),
+                     description='Update submission service',
+                     #acl=bodhi.security.package_maintainers_only_acl,
+                     acl=bodhi.security.packagers_allowed_acl,
+                     cors_origins=bodhi.security.cors_origins_rw)
 
 @update.get(accept=('application/json', 'text/json'), renderer='json',
             error_handler=bodhi.services.errors.json_handler)
