@@ -240,7 +240,6 @@ class MasherThread(threading.Thread):
         self.move_tags = []
         self.testing_digest = {}
         self.state = {
-            'tagged': False,
             'updates': updates,
             'completed_repos': []
         }
@@ -259,6 +258,10 @@ class MasherThread(threading.Thread):
         self.release = self.db.query(Release)\
                               .filter_by(name=self.release).one()
         self.id = getattr(self.release, '%s_tag' % self.request.value)
+
+        # Set our thread's "name" so it shows up nicely in the logs.
+        # https://docs.python.org/2/library/threading.html#thread-objects
+        self.name = self.id
 
         # For 'pending' branched releases, we only want to perform repo-related
         # tasks for testing updates. For stable updates, we should just add the
@@ -505,6 +508,9 @@ class MasherThread(threading.Thread):
     def _determine_tag_actions(self):
         tag_types, tag_rels = Release.get_tags()
         for update in sorted_updates(self.updates):
+            add_tags = []
+            move_tags = []
+
             if update.status is UpdateStatus.testing:
                 status = 'testing'
             else:
@@ -524,10 +530,13 @@ class MasherThread(threading.Thread):
                     break
 
                 if self.skip_mash:
-                    self.add_tags.append((update.requested_tag, build.nvr))
+                    add_tags.append((update.requested_tag, build.nvr))
                 else:
-                    self.move_tags.append((from_tag, update.requested_tag,
-                                           build.nvr))
+                    move_tags.append((from_tag, update.requested_tag,
+                                      build.nvr))
+            else:
+                self.add_tags.extend(add_tags)
+                self.move_tags.extend(move_tags)
 
     def _perform_tag_actions(self):
         self.koji.multicall = True
@@ -896,6 +905,9 @@ class MashThread(threading.Thread):
             mash_cmd += ' -p {}'.format(previous)
         self.mash_cmd = mash_cmd.format(outputdir=outputdir, config=mash_conf,
                                         compsfile=comps, tag=self.tag).split()
+        # Set our thread's "name" so it shows up nicely in the logs.
+        # https://docs.python.org/2/library/threading.html#thread-objects
+        self.name = tag
 
     def run(self):
         start = time.time()
